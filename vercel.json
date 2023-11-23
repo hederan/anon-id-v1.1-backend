@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/auth",
+      "dest": "/routes/auth.js"
+    },
+    {
+      "src": "/api/match",
+      "dest": "/routes/match.js"
+    },
+    {
+      "src": "/api/vote",
+      "dest": "/routes/vote.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ]
+}
