@@ -25,6 +25,8 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/auth", require("./routes/auth"));
+app.use("/vote", require("./routes/vote"));
+app.use("/user", require("./routes/user"));
 
 const PORT = process.env.PORT || 5000;
 
