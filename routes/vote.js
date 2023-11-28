@@ -2,26 +2,25 @@ const express = require("express");
 const router = express();
 const UserTable = require("../models/user");
 
-router.post("/isVotable", async (req, res) => {
-  const { username } = req.body;
+const canGetReward = async (username) => {
   try {
     const query = { username: username };
     const field = await UserTable.findOne(query);
     if (field) {
       if (field.finalVotedAt === null) {
-        return res.status(200).json({ isVotable: true });
+        return true;
       }
       const timeDiff = Date.now() - field.finalVotedAt;
       if (timeDiff > 24 * 60 * 60 * 1000) {
-        return res.status(200).json({ isVotable: true });
+        return true;
       }
     }
-    return res.status(200).json({ isVotable: false });
+    return false;
   } catch (err) {
     console.log("isVotable error: ", err);
-    return res.status(404).json({ err });
+    return false;
   }
-});
+};
 
 router.post("/getHuman", async (req, res) => {
   const { username } = req.body;
@@ -34,7 +33,7 @@ router.post("/getHuman", async (req, res) => {
           "voteInfo.username": { $nin: [username] },
         },
       },
-      { $sample: { size: 3 } },
+      // { $sample: { size: 3 } },
       { $project: { ipfsHash: 1, _id: 0 } },
     ]);
     return res.status(200).json(data);
@@ -92,16 +91,19 @@ router.post("/setLiveHuman", async (req, res) => {
         }
       }
     }
-    // limit voting for 24 hours once voted
-    const query2 = { username: username };
-    const field2 = await UserTable.findOne(query2);
-    const _set2 = {
-      username: username,
-      point: Number(field2.point) + 4, // daily reward
-      finalVotedAt: Date.now(),
-    };
-    const update2 = { $set: _set2 };
-    await UserTable.findOneAndUpdate(query2, update2);
+    // daily reward everyday
+    const isGetReward = await canGetReward(username);
+    if (isGetReward) {
+      const query2 = { username: username };
+      const field2 = await UserTable.findOne(query2);
+      const _set2 = {
+        username: username,
+        point: Number(field2.point) + 4, // daily reward
+        finalVotedAt: Date.now(),
+      };
+      const update2 = { $set: _set2 };
+      await UserTable.findOneAndUpdate(query2, update2);
+    }
     return res.status(200).json({ message: "ok" });
   } catch (err) {
     console.log("Set LiveHuman Error: ", err);
