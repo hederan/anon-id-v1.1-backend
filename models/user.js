@@ -28,14 +28,32 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  score: {
-    type: Number,
-    default: 0,
+  liveHuman: {
+    score: {
+      type: Number,
+      default: 0,
+    },
+    voteInfo: [voteInfoSchema],
+    finalVotedAt: {
+      type: Date,
+      default: null,
+    },
   },
-  voteInfo: [voteInfoSchema],
-  finalVotedAt: {
-    type: Date,
-    default: null,
+  recover: {
+    faceDescripter: {
+      type: Array,
+    },
+    ipfsHash: {
+      type: String,
+      default: null,
+    },
+    score: {
+      type: Number,
+      default: 0,
+    },
+    votedUsers: {
+      type: Array,
+    },
   },
   isBlackList: {
     type: Boolean,
