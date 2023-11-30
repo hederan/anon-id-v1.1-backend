@@ -31,6 +31,11 @@ router.post("/register", async (req, res) => {
     if (!ipfsHash) {
       return res.status(404).json({ message: "Ipfs hash is not defined" });
     }
+
+    const field = await UserTable.findOne({ username: username });
+    if (field) {
+      return res.status(404).json({ message: "Username already Exists" });
+    }
     const newUser = new UserTable({
       username,
       faceDescripter,

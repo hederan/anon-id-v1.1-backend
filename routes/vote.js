@@ -114,6 +114,11 @@ router.post("/setLiveHuman", async (req, res) => {
 router.post("/getRecoveryData", async (req, res) => {
   try {
     const { username } = req.body;
+    const query = { username: username };
+    const field = await UserTable.findOne(query);
+    if (!field) {
+      return res.status(404).json({ message: "Users not exists" });
+    }
     const data = await UserTable.aggregate([
       {
         $match: {
