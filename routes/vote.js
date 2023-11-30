@@ -53,8 +53,8 @@ router.post("/setLiveHuman", async (req, res) => {
         const _voteInfo = { username: username, voted: voteData[i].voted };
         const updateScore =
           voteData[i].voted === true
-            ? Number(field.score) + 1
-            : Number(field.score) - 1;
+            ? Number(field.liveHuman.score) + 1
+            : Number(field.liveHuman.score) - 1;
         const updateVoteInfo = field.liveHuman.voteInfo.concat(_voteInfo);
         const _set = {
           ipfsHash: voteData[i].ipfsHash,
