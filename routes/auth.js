@@ -3,6 +3,8 @@ const router = express();
 const faceapi = require("face-api.js");
 const jwt = require("jsonwebtoken");
 const UserTable = require("../models/user");
+const { oauth } = require("../modules/oauth/oauth");
+const { generateString } = require("../utils/generate.string");
 
 router.post("/getUser", async (req, res) => {
   const { username } = req.body;
@@ -44,7 +46,9 @@ router.post("/register", async (req, res) => {
 
     await newUser.save();
 
-    const token = jwt.sign({ username }, "anonID", { expiresIn: 30 });
+    const token = jwt.sign({ username: username }, "anonID", {
+      expiresIn: 100,
+    });
     return res.status(200).json({ message: "Success", token: token });
   } catch (err) {
     console.log("Register Error: ", err);
@@ -82,11 +86,9 @@ router.post("/login", async (req, res) => {
     const _faceDescripter = field.faceDescripter;
     const distance = faceapi.euclideanDistance(faceDescripter, _faceDescripter);
     if (distance < 0.25) {
-      const token = jwt.sign(
-        { _id: field._id, username: field.username },
-        "anonID",
-        { expiresIn: 30 }
-      );
+      const token = jwt.sign({ username: field.username }, "anonID", {
+        expiresIn: 100,
+      });
       return res.status(200).json({ message: "Success", token: token });
     } else {
       return res.status(404).json({
@@ -152,6 +154,10 @@ router.post("/isRecover", async (req, res) => {
   } catch (err) {
     console.log("Getting Recover Error: ", err);
   }
+});
+
+router.get("/check-oauth", oauth.authorise(), (req, res, next) => {
+  res.status(200).json("Got information successfully");
 });
 
 module.exports = router;
