@@ -3,8 +3,6 @@ const router = express();
 const faceapi = require("face-api.js");
 const jwt = require("jsonwebtoken");
 const UserTable = require("../models/user");
-const { oauth } = require("../modules/oauth/oauth");
-const { generateString } = require("../utils/generate.string");
 
 router.post("/getUser", async (req, res) => {
   const { username } = req.body;
@@ -154,10 +152,6 @@ router.post("/isRecover", async (req, res) => {
   } catch (err) {
     console.log("Getting Recover Error: ", err);
   }
-});
-
-router.get("/check-oauth", oauth.authorise(), (req, res, next) => {
-  res.status(200).json("Got information successfully");
 });
 
 module.exports = router;
