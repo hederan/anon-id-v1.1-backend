@@ -142,6 +142,14 @@ router.post("/setRecoveryData", async (req, res) => {
       }
     );
 
+    if (updatedScore >= 4 || updatedScore <= -4) {
+      for (let j = 0; j < field.recover.votedUsers.length; j++) {
+        const username = field.recover.votedUsers[j].username;
+        const point = updatedScore >= 4 ? 1 : -1;
+        await givePoint(username, point);
+      }
+    }
+
     if (updatedScore >= 4) {
       await UserTable.updateOne(
         { _id: field._id },
@@ -168,14 +176,6 @@ router.post("/setRecoveryData", async (req, res) => {
           },
         }
       );
-    }
-
-    if (updatedScore >= 4 || updatedScore <= -4) {
-      for (let j = 0; j < field.recover.votedUsers.length; j++) {
-        const username = field.recover.votedUsers[j].username;
-        const point = updatedScore >= 4 ? 1 : -1;
-        await givePoint(username, point);
-      }
     }
     return res.status(200).json({ result: 2 });
   } catch (err) {
