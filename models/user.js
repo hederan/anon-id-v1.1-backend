@@ -28,6 +28,10 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  level: {
+    type: Number,
+    default: 1,
+  },
   liveHuman: {
     score: {
       type: Number,

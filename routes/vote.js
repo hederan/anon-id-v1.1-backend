@@ -51,10 +51,11 @@ router.post("/setLiveHuman", async (req, res) => {
       const field = await UserTable.findOne(query);
       if (field) {
         const _voteInfo = { username: username, voted: voteData[i].voted };
+        const power = await getVotingPower(username);
         const updateScore =
           voteData[i].voted === true
-            ? Number(field.liveHuman.score) + 1
-            : Number(field.liveHuman.score) - 1;
+            ? Number(field.liveHuman.score) + power
+            : Number(field.liveHuman.score) - power;
         const updateVoteInfo = field.liveHuman.voteInfo.concat(_voteInfo);
         const _set = {
           ipfsHash: voteData[i].ipfsHash,
@@ -65,28 +66,9 @@ router.post("/setLiveHuman", async (req, res) => {
         await UserTable.findOneAndUpdate(query, update);
         if (updateScore >= 4 || updateScore <= -4) {
           for (let j = 0; j < updateVoteInfo.length; j++) {
-            const query1 = { username: updateVoteInfo[j].username };
-            const field1 = await UserTable.findOne(query1);
-            if (field1) {
-              let updatePoint = 0;
-              if (updateScore >= 4) {
-                updatePoint =
-                  updateVoteInfo[j].voted === true
-                    ? Number(field1.point) + 1
-                    : Number(field1.point) - 1;
-              } else {
-                updatePoint =
-                  updateVoteInfo[j].voted === false
-                    ? Number(field1.point) + 1
-                    : Number(field1.point) - 1;
-              }
-              const _set1 = {
-                username: updateVoteInfo[j].username,
-                point: updatePoint,
-              };
-              const update1 = { $set: _set1 };
-              await UserTable.findOneAndUpdate(query1, update1);
-            }
+            const username = updateVoteInfo[j].username;
+            const point = updateScore >= 4 ? 1 : -1;
+            await givePoint(username, point);
           }
         }
       }
@@ -94,15 +76,7 @@ router.post("/setLiveHuman", async (req, res) => {
     // daily reward everyday
     const isGetReward = await canGetReward(username);
     if (isGetReward) {
-      const query2 = { username: username };
-      const field2 = await UserTable.findOne(query2);
-      const _set2 = {
-        username: username,
-        point: Number(field2.point) + 4, // daily reward
-        "liveHuman.finalVotedAt": Date.now(),
-      };
-      const update2 = { $set: _set2 };
-      await UserTable.findOneAndUpdate(query2, update2);
+      await givePoint(username, 4); // daily reward
     }
     return res.status(200).json({ message: "ok" });
   } catch (err) {
@@ -157,8 +131,9 @@ router.post("/setRecoveryData", async (req, res) => {
     if (!field) {
       return res.status(404).send("User not found");
     }
+    const power = await getVotingPower(votedUsername);
     const score = isVoted ? 1 : -1;
-    const updatedScore = field.recover.score + score;
+    const updatedScore = field.recover.score + score * power;
     await UserTable.updateOne(
       { _id: field._id },
       {
@@ -194,11 +169,50 @@ router.post("/setRecoveryData", async (req, res) => {
         }
       );
     }
+
+    if (updatedScore >= 4 || updatedScore <= -4) {
+      for (let j = 0; j < field.recover.votedUsers.length; j++) {
+        const username = field.recover.votedUsers[j].username;
+        const point = updatedScore >= 4 ? 1 : -1;
+        await givePoint(username, point);
+      }
+    }
     return res.status(200).json({ result: 2 });
   } catch (err) {
     console.log("Match voting error: ", err);
     return res.status(404).send(err);
   }
 });
+
+const getVotingPower = async (username) => {
+  const query = { username: username };
+  const field = await UserTable.findOne(query);
+  const level = field.level;
+  const power = Number(level) * 1;
+  return power;
+};
+
+const givePoint = async (username, point) => {
+  try {
+    const query = { username: username };
+    const field = await UserTable.findOne(query);
+    const updatedPoint = Number(field.point) + Number(point);
+    const _set = {
+      username: username,
+      point: updatedPoint,
+      "liveHuman.finalVotedAt": Date.now(),
+      level: calcLevel(updatedPoint),
+    };
+    const update = { $set: _set };
+    await UserTable.findOneAndUpdate(query, update);
+  } catch (err) {
+    console.log("Giving Point Error: ", err);
+  }
+};
+
+const calcLevel = (point) => {
+  const level = Math.floor(Number(point) / 4) + 1;
+  return level;
+};
 
 module.exports = router;
