@@ -7,10 +7,10 @@ const canGetReward = async (username) => {
     const query = { username: username };
     const field = await UserTable.findOne(query);
     if (field) {
-      if (field.finalVotedAt == null) {
+      if (field.liveHuman.finalVotedAt == null) {
         return true;
       }
-      const timeDiff = Date.now() - field.finalVotedAt;
+      const timeDiff = Date.now() - field.liveHuman.finalVotedAt;
       if (timeDiff > 24 * 60 * 60 * 1000) {
         return true;
       }
