@@ -7,7 +7,7 @@ const canGetReward = async (username) => {
     const query = { username: username };
     const field = await UserTable.findOne(query);
     if (field) {
-      if (field.finalVotedAt === null) {
+      if (field.finalVotedAt == null) {
         return true;
       }
       const timeDiff = Date.now() - field.finalVotedAt;
@@ -75,6 +75,7 @@ router.post("/setLiveHuman", async (req, res) => {
     }
     // daily reward everyday
     const isGetReward = await canGetReward(username);
+    console.log({ isGetReward, username });
     if (isGetReward) {
       await givePoint(username, 4); // daily reward
     }
@@ -177,6 +178,12 @@ router.post("/setRecoveryData", async (req, res) => {
         }
       );
     }
+    // daily reward everyday
+    const isGetReward = await canGetReward(votedUsername);
+    console.log({ isGetReward });
+    if (isGetReward) {
+      await givePoint(votedUsername, 4); // daily reward
+    }
     return res.status(200).json({ result: 2 });
   } catch (err) {
     console.log("Match voting error: ", err);
@@ -197,10 +204,12 @@ const givePoint = async (username, point) => {
     const query = { username: username };
     const field = await UserTable.findOne(query);
     const updatedPoint = Number(field.point) + Number(point);
+    const finalVotedAt = field.liveHuman.finalVotedAt;
+    const isReward = await canGetReward(username);
     const _set = {
       username: username,
       point: updatedPoint,
-      "liveHuman.finalVotedAt": Date.now(),
+      "liveHuman.finalVotedAt": isReward ? Date.now() : finalVotedAt,
       level: calcLevel(updatedPoint),
     };
     const update = { $set: _set };

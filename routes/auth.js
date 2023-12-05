@@ -83,7 +83,7 @@ router.post("/login", async (req, res) => {
 
     const _faceDescripter = field.faceDescripter;
     const distance = faceapi.euclideanDistance(faceDescripter, _faceDescripter);
-    if (distance < 0.25) {
+    if (distance < 0.3) {
       const token = jwt.sign({ username: field.username }, "anonID", {
         expiresIn: 100,
       });
