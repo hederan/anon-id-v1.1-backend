@@ -66,9 +66,9 @@ router.post("/setLiveHuman", async (req, res) => {
         await UserTable.findOneAndUpdate(query, update);
         if (updateScore >= 4 || updateScore <= -4) {
           for (let j = 0; j < updateVoteInfo.length; j++) {
-            const username = updateVoteInfo[j].username;
+            const _username = updateVoteInfo[j].username;
             const point = updateScore >= 4 ? 1 : -1;
-            await givePoint(username, point);
+            await givePoint(_username, point, false);
           }
         }
       }
@@ -77,7 +77,7 @@ router.post("/setLiveHuman", async (req, res) => {
     const isGetReward = await canGetReward(username);
     console.log({ isGetReward, username });
     if (isGetReward) {
-      await givePoint(username, 4); // daily reward
+      await givePoint(username, 4, true); // daily reward
     }
     return res.status(200).json({ message: "ok" });
   } catch (err) {
@@ -147,7 +147,7 @@ router.post("/setRecoveryData", async (req, res) => {
       for (let j = 0; j < field.recover.votedUsers.length; j++) {
         const username = field.recover.votedUsers[j].username;
         const point = updatedScore >= 4 ? 1 : -1;
-        await givePoint(username, point);
+        await givePoint(username, point, false);
       }
     }
 
@@ -182,7 +182,7 @@ router.post("/setRecoveryData", async (req, res) => {
     const isGetReward = await canGetReward(votedUsername);
     console.log({ isGetReward });
     if (isGetReward) {
-      await givePoint(votedUsername, 4); // daily reward
+      await givePoint(votedUsername, 4, true); // daily reward
     }
     return res.status(200).json({ result: 2 });
   } catch (err) {
@@ -199,13 +199,12 @@ const getVotingPower = async (username) => {
   return power;
 };
 
-const givePoint = async (username, point) => {
+const givePoint = async (username, point, isReward) => {
   try {
     const query = { username: username };
     const field = await UserTable.findOne(query);
     const updatedPoint = Number(field.point) + Number(point);
     const finalVotedAt = field.liveHuman.finalVotedAt;
-    const isReward = await canGetReward(username);
     const _set = {
       username: username,
       point: updatedPoint,
