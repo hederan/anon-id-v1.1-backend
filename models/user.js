@@ -55,9 +55,7 @@ const UserSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
-    votedUsers: {
-      type: Array,
-    },
+    voteInfo: [voteInfoSchema],
   },
   isBlackList: {
     type: Boolean,

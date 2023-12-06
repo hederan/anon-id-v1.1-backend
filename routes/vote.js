@@ -100,7 +100,7 @@ router.post("/getRecoveryData", async (req, res) => {
           username: { $ne: username },
           "recover.ipfsHash": { $ne: null },
           "recover.score": { $gte: -4, $lte: 4 },
-          "recover.votedUsers": { $nin: [username] },
+          "recover.voteInfo.username": { $nin: [username] },
         },
       },
       { $limit: 1 },
@@ -135,18 +135,27 @@ router.post("/setRecoveryData", async (req, res) => {
     const power = await getVotingPower(votedUsername);
     const score = isVoted ? 1 : -1;
     const updatedScore = field.recover.score + score * power;
+
+    const _voteInfo = { username: votedUsername, voted: isVoted };
+
     await UserTable.updateOne(
       { _id: field._id },
       {
         $inc: { "recover.score": updatedScore },
-        $push: { "recover.votedUsers": votedUsername },
+        $push: { "recover.voteInfo": _voteInfo },
       }
     );
 
     if (updatedScore >= 4 || updatedScore <= -4) {
-      for (let j = 0; j < field.recover.votedUsers.length; j++) {
-        const username = field.recover.votedUsers[j].username;
-        const point = updatedScore >= 4 ? 1 : -1;
+      for (let j = 0; j < field.recover.voteInfo.length; j++) {
+        const username = field.recover.voteInfo[j].username;
+        const voted = field.recover.voteInfo[j].voted;
+        let point = 0;
+        if (voted === true) {
+          point = updatedScore >= 4 ? 1 : -1;
+        } else {
+          point = updatedScore >= 4 ? -1 : 1;
+        }
         await givePoint(username, point, false);
       }
     }
@@ -161,7 +170,7 @@ router.post("/setRecoveryData", async (req, res) => {
             "recover.ipfsHash": null,
             "recover.faceDescripter": [],
             "recover.score": 0,
-            "recover.votedUsers": [],
+            "recover.voteInfo": [],
           },
         }
       );
@@ -173,7 +182,7 @@ router.post("/setRecoveryData", async (req, res) => {
             "recover.ipfsHash": null,
             "recover.faceDescripter": [],
             "recover.score": 0,
-            "recover.votedUsers": [],
+            "recover.voteInfo": [],
           },
         }
       );
