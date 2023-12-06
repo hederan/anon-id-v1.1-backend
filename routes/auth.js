@@ -169,6 +169,9 @@ router.post("/re-register", async (req, res) => {
       username: username,
       faceDescripter: faceDescripter,
       ipfsHash: ipfsHash,
+      "liveHuman.score": 0,
+      "liveHuman.voteInfo": [],
+      "liveHuman.finalVotedAt": null,
     };
     const update = { $set: _set };
     await UserTable.findOneAndUpdate(query, update);
