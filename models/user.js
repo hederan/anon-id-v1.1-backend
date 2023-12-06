@@ -57,6 +57,10 @@ const UserSchema = new mongoose.Schema({
     },
     voteInfo: [voteInfoSchema],
   },
+  isHuman: {
+    type: Boolean,
+    default: true,
+  },
   isBlackList: {
     type: Boolean,
     default: false,

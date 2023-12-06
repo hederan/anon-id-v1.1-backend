@@ -70,6 +70,11 @@ router.post("/setLiveHuman", async (req, res) => {
             const point = updateScore >= 4 ? 1 : -1;
             await givePoint(_username, point, false);
           }
+          if (updateScore <= -4) {
+            await setLiveHuman(field.username, false);
+          } else {
+            await setLiveHuman(field.username, true);
+          }
         }
       }
     }
@@ -230,6 +235,19 @@ const givePoint = async (username, point, isReward) => {
 const calcLevel = (point) => {
   const level = Math.floor(Number(point) / 4) + 1;
   return level;
+};
+
+const setLiveHuman = async (username, status) => {
+  const query = { username: username };
+  const field = await UserTable.findOne(query);
+  if (field) {
+    const _set = {
+      username: username,
+      isHuman: status,
+    };
+    const update = { $set: _set };
+    await UserTable.findOneAndUpdate(query, update);
+  }
 };
 
 module.exports = router;

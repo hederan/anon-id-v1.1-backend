@@ -154,4 +154,28 @@ router.post("/isRecover", async (req, res) => {
   }
 });
 
+router.post("/re-register", async (req, res) => {
+  const { username, ipfsHash, faceDescripter } = req.body;
+  try {
+    if (!username) {
+      return res.status(404).json({ message: "Username is not defined" });
+    }
+    const query = { username: username };
+    const field = await UserTable.findOne(query);
+    if (!field) {
+      return res.status(404).json({ message: "Can't find that user" });
+    }
+    const _set = {
+      username: username,
+      faceDescripter: faceDescripter,
+      ipfsHash: ipfsHash,
+    };
+    const update = { $set: _set };
+    await UserTable.findOneAndUpdate(query, update);
+    return res.status(200).json({ message: "ok" });
+  } catch (err) {
+    console.log("Re Registering Error: ", err);
+  }
+});
+
 module.exports = router;
